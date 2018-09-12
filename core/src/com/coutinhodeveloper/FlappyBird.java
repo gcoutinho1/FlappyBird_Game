@@ -2,8 +2,10 @@ package com.coutinhodeveloper;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.util.Random;
@@ -23,10 +25,15 @@ public class FlappyBird extends ApplicationAdapter {
     private Texture canoBaixo;
     private Texture canoTopo;
     private Random numeroRng;
+    private BitmapFont fonte;
 
     //atributos de configurações do jogo
     private int larguraDispositivo;
     private int alturaDispositivo;
+    private int estadoJogo=0;
+    private int pontuacao=0;
+
+
     private float variacao = 0;
     private float velocidadeQueda=0;
     private float posicaoInicialVertical;
@@ -34,6 +41,7 @@ public class FlappyBird extends ApplicationAdapter {
     private float espacoEntreCanos;
     private float deltaTime;
     private float alturaRngCanos;
+    private boolean fezPonto;
 
 
 
@@ -44,6 +52,11 @@ public class FlappyBird extends ApplicationAdapter {
 
 	    batch = new SpriteBatch();
 	    numeroRng = new Random();
+	    fonte = new BitmapFont();
+	    fonte.setColor(Color.WHITE);
+	    fonte.getData().setScale(6);
+
+
 	    passaros = new Texture[3];
 	    passaros[0] = new Texture("passaro1.png");
 	    passaros[1] = new Texture("passaro2.png");
@@ -67,27 +80,50 @@ public class FlappyBird extends ApplicationAdapter {
 	@Override
 	public void render () {
 
-	    deltaTime = Gdx.graphics.getDeltaTime();
-
+        deltaTime = Gdx.graphics.getDeltaTime();
         variacao += deltaTime * 10;
-        posicaoMovimentoCanoHorizontal -= deltaTime * 200;
-        velocidadeQueda++;
+        if (variacao > 2) variacao = 0;
+
+	    if ( estadoJogo == 0){
+	        if ( Gdx.input.justTouched() ){
+	            estadoJogo = 1;
+
+            }
+
+        }else {
 
 
-        if (variacao >2) variacao = 0;
+            posicaoMovimentoCanoHorizontal -= deltaTime * 200;
+            velocidadeQueda++;
 
-        if ( Gdx.input.justTouched() ){
-            velocidadeQueda = -15;
 
-        }
 
-        if (posicaoInicialVertical > 0 || velocidadeQueda < 0)
-        posicaoInicialVertical += - velocidadeQueda;
 
-        //verificação do movimento do cano
-        if (posicaoMovimentoCanoHorizontal < - canoTopo.getWidth()){
-            posicaoMovimentoCanoHorizontal = larguraDispositivo;
-            alturaRngCanos = numeroRng.nextInt(400) - 200;
+            if (Gdx.input.justTouched()) {
+                velocidadeQueda = -15;
+
+            }
+
+            if (posicaoInicialVertical > 0 || velocidadeQueda < 0)
+                posicaoInicialVertical += -velocidadeQueda;
+
+            //verificação do movimento do cano
+            if (posicaoMovimentoCanoHorizontal < -canoTopo.getWidth()) {
+                posicaoMovimentoCanoHorizontal = larguraDispositivo;
+                alturaRngCanos = numeroRng.nextInt(400) - 200;
+                fezPonto = false;
+
+            }
+
+            //verificação da pontuação
+            if (posicaoMovimentoCanoHorizontal < 120){
+                if ( !fezPonto ){
+                    pontuacao++;
+                    fezPonto = true;
+                }
+
+
+            }
 
         }
 
@@ -97,7 +133,8 @@ public class FlappyBird extends ApplicationAdapter {
 	    batch.draw(fundo,0,0,larguraDispositivo,alturaDispositivo);
         batch.draw(canoTopo, posicaoMovimentoCanoHorizontal,alturaDispositivo / 2 + espacoEntreCanos + alturaRngCanos); //( espacoEntreCanos / 2)
         batch.draw(canoBaixo, posicaoMovimentoCanoHorizontal,alturaDispositivo / 2 - canoBaixo.getHeight() - espacoEntreCanos + alturaRngCanos); //( espacoEntreCanos / 2)
-        batch.draw(passaros [(int) variacao], 30,posicaoInicialVertical);
+        batch.draw(passaros [(int) variacao], 120,posicaoInicialVertical);
+        fonte.draw(batch, String.valueOf(pontuacao), larguraDispositivo / 2, alturaDispositivo - 50);
 
 	    batch.end();
 
